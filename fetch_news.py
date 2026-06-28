@@ -26,6 +26,9 @@ RSS_SOURCES = {
     "InfoQ 中文": "https://www.infoq.cn/feed",
 
     # ----- 国际科技媒体 -----
+    "BBC Tech": "https://feeds.bbci.co.uk/news/technology/rss.xml",
+    "CNN Tech": "https://rss.cnn.com/rss/cnn_tech.rss",
+    "Reuters": "https://news.google.com/rss/search?q=site:reuters.com+technology+innovation+AI&hl=en-US&gl=US&ceid=US:en",
     "TechCrunch": "https://techcrunch.com/feed/",
     "The Verge": "https://www.theverge.com/rss/index.xml",
     "Ars Technica": "https://feeds.arstechnica.com/arstechnica/index",
