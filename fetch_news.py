@@ -12,7 +12,6 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 import aiohttp
 import feedparser
-from xml.etree import ElementTree
 
 # ---------- 时区 ----------
 TZ = timezone(timedelta(hours=8))
@@ -133,6 +132,76 @@ async def gather_news() -> list[dict]:
     return all_items
 
 
+def _has_chinese(text: str) -> bool:
+    """检查文本是否包含中文字符"""
+    return any('\u4e00' <= c <= '\u9fff' for c in text)
+
+
+def _looks_english(text: str) -> bool:
+    """判断文本是否看起来是英文（需要翻译）"""
+    if not text or len(text.strip()) < 3:
+        return False
+    # 已经包含中文则不翻译
+    if _has_chinese(text):
+        return False
+    # 统计英文字母占比
+    alpha = sum(1 for c in text if c.isascii() and c.isalpha())
+    return alpha > 0 and (alpha / len(text.strip())) > 0.4
+
+
+_translate_semaphore = asyncio.Semaphore(5)  # 最多 5 个并发翻译
+
+
+async def translate_text(session: aiohttp.ClientSession, text: str) -> str:
+    """使用 Google Translate 将英文翻译为中文"""
+    text = text.strip()[:500]
+    if not _looks_english(text):
+        return text
+    async with _translate_semaphore:
+        try:
+            url = "https://translate.googleapis.com/translate_a/single"
+            params = {
+                "client": "gtx",
+                "sl": "en",
+                "tl": "zh-CN",
+                "dt": "t",
+                "q": text,
+            }
+            async with session.get(url, params=params,
+                                   timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    translated = "".join(part[0] for part in data[0] if part[0])
+                    return translated.strip() or text
+                else:
+                    print(f"  [!] 翻译接口返回 {resp.status}")
+        except Exception as e:
+            print(f"  [!] 翻译失败: {e}")
+    return text
+
+
+async def translate_news(items: list[dict]) -> list[dict]:
+    """批量翻译英文新闻的标题和摘要"""
+    print("\n🌐 翻译英文新闻...")
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for item in items:
+            tasks.append(translate_text(session, item["title"]))
+            tasks.append(translate_text(session, item["summary"]))
+        results = await asyncio.gather(*tasks)
+    # 结果交错：偶数索引是标题，奇数索引是摘要
+    translated_count = 0
+    for i, item in enumerate(items):
+        new_title = results[i * 2]
+        new_summary = results[i * 2 + 1]
+        if new_title != item["title"]:
+            translated_count += 1
+        item["title"] = new_title
+        item["summary"] = new_summary
+    print(f"  ✅ 翻译了 {translated_count} 条新闻标题/摘要")
+    return items
+
+
 def format_feishu_message(items: list[dict]) -> dict:
     """格式化为飞书消息卡片"""
     if not items:
@@ -241,7 +310,10 @@ async def main():
     # 1. 抓新闻
     news = await gather_news()
 
-    # 2. 格式化
+    # 2. 翻译英文新闻为中文
+    news = await translate_news(news)
+
+    # 3. 格式化
     payload = format_feishu_message(news)
     print("\n📋 简报已整理，准备推送...")
 
