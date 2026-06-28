@@ -149,6 +149,46 @@ def _looks_english(text: str) -> bool:
     return alpha > 0 and (alpha / len(text.strip())) > 0.4
 
 
+# ---------- 重点话题关键词 ----------
+TOPIC_KEYWORDS = {
+    "AI大模型": [
+        "GPT", "OpenAI", "ChatGPT", "Claude", "Anthropic", "Gemini", "Google AI",
+        "LLM", "LLaMA", "Llama", "Mistral", "Qwen", "通义千问", "DeepSeek", "深度求索",
+        "文心一言", "ERNIE", "大模型", "大语言模型", "语言模型", "foundation model",
+        "transformer", "多模态", "multimodal", "Sora", "DALL-E", "Midjourney",
+        "Copilot", "AI model", "fine-tun", "RAG", "agent",
+    ],
+    "马斯克": [
+        "Musk", "马斯克", "Tesla", "SpaceX", "xAI", "Neuralink", "Grok",
+        "Twitter", "X Corp", "Optimus", "Cybertruck", "Boring Company", "Starlink",
+    ],
+    "机器人": [
+        "robot", "机器人", "humanoid", "人形机器人", "robotics",
+        "Optimus", "擎天柱", "Boston Dynamics", "机器狗", "drone", "无人机",
+        "automation", "自动化", "机械臂", "ROS",
+    ],
+    "中美AI": [
+        "US-China", "中美", "chip ban", "芯片禁令", "半导体", "semiconductor",
+        "NVIDIA", "英伟达", "制裁", "sanctions", "export control", "出口管制",
+        "AI race", "人工智能竞争", "华��", "Huawei", "BIS", "CHIPS Act",
+        "国产替代", "自主可控",
+    ],
+}
+
+
+def tag_news(items: list[dict]) -> list[dict]:
+    """为新闻打上话题标签"""
+    for item in items:
+        text = (item["title"] + " " + item["summary"]).lower()
+        item["tags"] = []
+        for topic, keywords in TOPIC_KEYWORDS.items():
+            for kw in keywords:
+                if kw.lower() in text:
+                    item["tags"].append(topic)
+                    break
+    return items
+
+
 _translate_semaphore = asyncio.Semaphore(5)  # 最多 5 个并发翻译
 
 
@@ -224,7 +264,43 @@ def format_feishu_message(items: list[dict]) -> dict:
     ai_items = [i for i in items if i["source"] in AI_SOURCES]
     intl_items = [i for i in items if i["source"] not in CN_SOURCES and i["source"] not in AI_SOURCES]
 
+    # 重点话题：有标签的新闻，去重后按话题展示
+    featured_map = {}  # topic -> [items]
+    for item in items:
+        for tag in item.get("tags", []):
+            featured_map.setdefault(tag, []).append(item)
+
     elements = []
+
+    # 🔥 重点关注板块
+    if featured_map:
+        TOPIC_EMOJI = {"AI大模型": "🧠", "马斯克": "🐦", "机器人": "🦾", "中美AI": "⚡"}
+        featured_block = [{
+            "tag": "div",
+            "text": {"tag": "lark_md", "content": "**🔥 重点关注**"}
+        }]
+        for topic in ("AI大模型", "马斯克", "机器人", "中美AI"):
+            topic_items = featured_map.get(topic, [])
+            if not topic_items:
+                continue
+            emoji = TOPIC_EMOJI.get(topic, "📌")
+            featured_block.append({
+                "tag": "div",
+                "text": {"tag": "lark_md", "content": f"**{emoji} {topic}**"}
+            })
+            for item in topic_items[:3]:
+                title = item["title"][:60]
+                summary = item["summary"][:80] if item["summary"] else ""
+                content = f"• **[{title}]({item['link']})**"
+                if summary:
+                    content += f"\n  {summary}"
+                content += f"\n  `{item['source']}`"
+                featured_block.append({
+                    "tag": "div",
+                    "text": {"tag": "lark_md", "content": content}
+                })
+        elements.extend(featured_block)
+        elements.append({"tag": "hr"})
 
     def make_elements(category_title, item_list, emoji, maxn=6):
         block = []
@@ -313,7 +389,10 @@ async def main():
     # 2. 翻译英文新闻为中文
     news = await translate_news(news)
 
-    # 3. 格式化
+    # 3. 打标签（AI大模型 / 马斯克 / 机器人 / 中美AI）
+    news = tag_news(news)
+
+    # 4. 格式化
     payload = format_feishu_message(news)
     print("\n📋 简报已整理，准备推送...")
 
