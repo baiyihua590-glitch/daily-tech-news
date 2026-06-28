@@ -2,8 +2,8 @@ name: 🗞️ 每日 AI & 科技简报
 
 on:
   schedule:
-    # 每天北京时间 12:00 (UTC 04:00)
-    - cron: '0 4 * * *'
+    # 每天北京时间 09:30 (UTC 01:30)
+    - cron: '30 1 * * *'
   workflow_dispatch:  # 支持手动触发
 
 jobs:
