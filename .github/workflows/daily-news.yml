@@ -1,0 +1,31 @@
+name: 🗞️ 每日 AI & 科技简报
+
+on:
+  schedule:
+    # 每天北京时间 12:00 (UTC 04:00)
+    - cron: '0 4 * * *'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  fetch-and-push:
+    name: 抓取新闻并推送飞书
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 签出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 抓取新闻并推送飞书
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+        run: python fetch_news.py
