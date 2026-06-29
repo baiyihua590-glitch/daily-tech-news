@@ -26,7 +26,7 @@ RSS_SOURCES = {
 
     # ----- 国际科技媒体 -----
     "BBC Tech": "https://feeds.bbci.co.uk/news/technology/rss.xml",
-    "CNN Tech": "https://rss.cnn.com/rss/cnn_tech.rss",
+    "CNN Tech": "https://cnn.com/rss/edition_technology.rss",
     "Reuters": "https://news.google.com/rss/search?q=site:reuters.com+technology+innovation+AI&hl=en-US&gl=US&ceid=US:en",
     "TechCrunch": "https://techcrunch.com/feed/",
     "The Verge": "https://www.theverge.com/rss/index.xml",
@@ -46,7 +46,6 @@ RSS_SOURCES = {
     "HackerNews": "https://hnrss.org/frontpage",
     "Product Hunt": "https://www.producthunt.com/feed",
     "TLDR AI": "https://tldr.tech/api/rss/ai",
-    "Ben's Bites": "https://bensbites.beehiiv.com/feed",
 }
 
 HEADERS = {
@@ -258,7 +257,7 @@ def format_feishu_message(items: list[dict]) -> dict:
     # 分类
     CN_SOURCES = ("36氪", "虎嗅", "InfoQ 中文")
     AI_SOURCES = ("OpenAI", "Google AI", "Hugging Face", "MarkTechPost",
-                  "arXiv cs.AI", "TLDR AI", "Ben's Bites")
+                  "arXiv cs.AI", "TLDR AI")
 
     cn_items = [i for i in items if i["source"] in CN_SOURCES]
     ai_items = [i for i in items if i["source"] in AI_SOURCES]
