@@ -1,0 +1,52 @@
+name: 🎙️ 每日 AI 早报播客
+
+on:
+  schedule:
+    # UTC 01:00 = 北京时间 09:00；时间不敏感，喵老大于车中收听
+    - cron: '0 1 * * *'
+  workflow_dispatch:  # 支持手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  build-podcast:
+    name: 抓取新闻并生成播客
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 签出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装系统依赖 ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: 安装 Python 依赖
+        run: pip install -r requirements.txt
+
+      - name: 抓取并翻译新闻
+        run: python fetch_news.py
+
+      - name: 生成播客音频与 RSS
+        env:
+          PAGES_BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+        run: python podcast.py
+
+      - name: 提交到仓库（GitHub Pages 托管）
+        run: |
+          git config user.name "星期六"
+          git config user.email "baiyihua590-glitch@users.noreply.github.com"
+          git add docs/
+          if git diff --cached --quiet; then
+            echo "无变化，跳过提交"
+          else
+            git commit -m "podcast: $(date +%Y-%m-%d) 更新"
+            git push
+          fi

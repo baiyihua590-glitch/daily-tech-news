@@ -371,14 +371,33 @@ async def send_to_feishu(webhook_url: str, payload: dict):
             return False
 
 
-async def main():
-    webhook = os.environ.get("FEISHU_WEBHOOK")
-    if not webhook:
-        print("❌ 环境变量 FEISHU_WEBHOOK 未设置")
-        sys.exit(1)
+def select_news(items: list[dict], max_n: int = 10) -> list[dict]:
+    """优先保留带标签（重点关注）的新闻，再用其他补充，控制总量"""
+    featured = [i for i in items if i.get("tags")]
+    others = [i for i in items if not i.get("tags")]
+    seen = set()
+    ordered = []
+    for i in featured + others:
+        if i["link"] in seen:
+            continue
+        seen.add(i["link"])
+        ordered.append(i)
+    return ordered[:max_n]
 
+
+def save_news(items: list[dict], path: str = "news.json"):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({
+            "date": TODAY,
+            "count": len(items),
+            "items": items,
+        }, f, ensure_ascii=False, indent=2)
+    print(f"\n💾 已保存 {len(items)} 条新闻到 {path}")
+
+
+async def main():
     print("=" * 50)
-    print("  喵老大 AI & 科技新闻简报")
+    print("  喵老大 AI & 科技新闻抓取")
     print(f"  日期: {TODAY}")
     print("=" * 50)
 
@@ -391,17 +410,12 @@ async def main():
     # 3. 打标签（AI大模型 / 马斯克 / 机器人 / 中美AI）
     news = tag_news(news)
 
-    # 4. 格式化
-    payload = format_feishu_message(news)
-    print("\n📋 简报已整理，准备推送...")
+    # 4. 筛选（重点关注优先）
+    news = select_news(news, max_n=10)
 
-    # 3. 推送
-    ok = await send_to_feishu(webhook, payload)
-    if ok:
-        print("\n🎉 简报推送成功！")
-    else:
-        print("\n❌ 简报推送失败")
-        sys.exit(1)
+    # 5. 保存
+    save_news(news)
+    print("\n✅ 抓取完成，等待生成播客...")
 
 
 if __name__ == "__main__":
