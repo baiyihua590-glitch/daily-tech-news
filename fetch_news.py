@@ -74,7 +74,12 @@ async def fetch_rss(session: aiohttp.ClientSession, name: str, url: str) -> list
             if resp.status != 200:
                 print(f"  [!] {name} -> HTTP {resp.status}")
                 return items
-            text = await resp.text()
+            # 容错：部分源（如 CNN）含非 UTF-8 字节，强制按 UTF-8 容错解码
+            raw = await resp.read()
+            try:
+                text = raw.decode("utf-8")
+            except UnicodeDecodeError:
+                text = raw.decode("utf-8", errors="replace")
     except Exception as e:
         print(f"  [!] {name} -> {e}")
         return items
