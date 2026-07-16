@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>喵老大AI早报</title>
+    <description>每日精选 AI 与科技热点，开车路上听新闻。由星期六自动生成。</description>
+    <language>zh-CN</language>
+    <link>https://baiyihua590-glitch.github.io/daily-tech-news/</link>
+    <itunes:author>星期六</itunes:author>
+    <itunes:category text="Technology" />
+    <itunes:explicit>false</itunes:explicit>
+    <item>
+      <title>AI早报 2026-07-16</title>
+      <description>1. 8点1氪丨国行苹果AI功能完成备案；三家共享单车上调起步价；知情人曝DeepSeek开始筹备IPO（36氪）
+2. 据报道，微软正在培训销售人员谈论 OpenAI 和 Anthropic（TechCrunch）
+3. Thinking Machines Lab 发布 Inkling：具有 41B 主动参数和可控思维能力的 975B 参数开放权重多模态 MoE（MarkTechPost）
+4. 代理编排：企业人工智能组织面临的是部署问题，而不是平台问题——而且大多数都在调用聊天机器人代理（VentureBeat）
+5. IPO前夜，阶跃星辰想用一款 Agent 手机给市场吃一颗定心丸（InfoQ 中文）
+6. xAI 起诉一名男子使用 Grok 生成 CSAM“deepfakes”（The Verge）
+7. Thinking Machines 开源了第一个多模式语言模型 Inkling，专注于低成本和“抵制审查”（VentureBeat）
+8. Soofi 联盟发布 Soofi S 30B-A3B：适用于德语和英语的开放式混合 Mamba-Transformer 教育部基础模型（MarkTechPost）
+9. 在硬件法律战中，OpenAI 为 Codex 发布了售价 230 美元的键盘（TechCrunch）
+10. SpaceX 股价跌破上市首日价（BBC Tech）</description>
+      <enclosure url="https://baiyihua590-glitch.github.io/daily-tech-news/audio/2026-07-16.mp3" type="audio/mpeg" />
+      <guid isPermaLink="false">https://baiyihua590-glitch.github.io/daily-tech-news/audio/2026-07-16.mp3</guid>
+      <pubDate>Thu, 16 Jul 2026 13:29:02 +0800</pubDate>
+      <itunes:duration>356</itunes:duration>
+    </item>
+  </channel>
+</rss>
